@@ -1,1 +1,503 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRX MOVIE HUB - Admin</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #080d19;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 30px;
+            background: #151e30;
+            border: 1px solid #26344c;
+            border-radius: 15px;
+            box-shadow: 0 15px 45px rgba(0,0,0,.35);
+        }
+
+        h1 {
+            text-align: center;
+            color: #38bdf8;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 21px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            margin: 9px 0;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: white;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #38bdf8;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #0284c7;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0369a1;
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .secondary {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #38bdf8;
+        }
+
+        .secondary:hover {
+            background: #1e293b;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 18px;
+            line-height: 1.5;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #38bdf8;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>HRX MOVIE HUB</h1>
+
+    <!-- LOGIN SECTION -->
+    <section id="loginSection">
+        <h2>Admin Login</h2>
+        <p class="subtitle">Sign in to your admin account</p>
+
+        <form id="loginForm">
+            <input
+                type="email"
+                id="loginEmail"
+                placeholder="Admin Email"
+                autocomplete="email"
+                required
+            >
+
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Password"
+                autocomplete="current-password"
+                required
+            >
+
+            <button type="submit" id="loginBtn">
+                Sign In
+            </button>
+        </form>
+
+        <button type="button" class="secondary" id="forgotBtn">
+            Forgot Password?
+        </button>
+
+        <p class="message" id="loginMessage"></p>
+    </section>
+
+
+    <!-- FORGOT PASSWORD SECTION -->
+    <section id="forgotSection" class="hidden">
+        <h2>Forgot Password</h2>
+        <p class="subtitle">
+            Enter your registered admin email.
+        </p>
+
+        <form id="forgotForm">
+            <input
+                type="email"
+                id="forgotEmail"
+                placeholder="Admin Email"
+                autocomplete="email"
+                required
+            >
+
+            <button type="submit" id="forgotSubmitBtn">
+                Send Recovery Email
+            </button>
+        </form>
+
+        <p class="message" id="forgotMessage"></p>
+
+        <span class="back" id="backToLogin1">
+            ← Back to Login
+        </span>
+    </section>
+
+
+    <!-- RESET PASSWORD SECTION -->
+    <section id="resetSection" class="hidden">
+        <h2>Reset Password</h2>
+        <p class="subtitle">
+            Create your new admin password.
+        </p>
+
+        <form id="resetForm">
+            <input
+                type="password"
+                id="newPassword"
+                placeholder="New Password (Minimum 8 characters)"
+                minlength="8"
+                autocomplete="new-password"
+                required
+            >
+
+            <input
+                type="password"
+                id="confirmPassword"
+                placeholder="Confirm New Password"
+                minlength="8"
+                autocomplete="new-password"
+                required
+            >
+
+            <button type="submit" id="resetBtn">
+                Update Password
+            </button>
+        </form>
+
+        <p class="message" id="resetMessage"></p>
+    </section>
+
+</div>
+
+
+<script>
+    // SUPABASE CONNECTION
+
+    const SUPABASE_URL =
+        "https://sdfrbfyywzlzpkrlpguh.supabase.co";
+
+    const SUPABASE_ANON_KEY =
+        "sb_publishable_2PkFUoj4M_jAxOpX7AAODw_GW9Jc4G4";
+
+    const supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+    // SECTIONS
+
+    const loginSection = document.getElementById("loginSection");
+    const forgotSection = document.getElementById("forgotSection");
+    const resetSection = document.getElementById("resetSection");
+
+    function showSection(section) {
+        loginSection.classList.add("hidden");
+        forgotSection.classList.add("hidden");
+        resetSection.classList.add("hidden");
+
+        section.classList.remove("hidden");
+    }
+
+    function showMessage(element, message, color) {
+        element.textContent = message;
+        element.style.color = color;
+    }
+
+
+    // LOGIN
+
+    document.getElementById("loginForm").addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+            const email =
+                document.getElementById("loginEmail").value.trim();
+
+            const password =
+                document.getElementById("loginPassword").value;
+
+            const button = document.getElementById("loginBtn");
+            const message = document.getElementById("loginMessage");
+
+            button.disabled = true;
+            button.textContent = "Signing in...";
+
+            showMessage(message, "", "#fff");
+
+            try {
+                const { error } =
+                    await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+                if (error) throw error;
+
+                showMessage(
+                    message,
+                    "Login successful! Redirecting...",
+                    "#4ade80"
+                );
+
+                window.location.href = "dashboard.html";
+
+            } catch (error) {
+                showMessage(message, error.message, "#f87171");
+
+            } finally {
+                button.disabled = false;
+                button.textContent = "Sign In";
+            }
+        }
+    );
+
+
+    // OPEN FORGOT PASSWORD
+
+    document.getElementById("forgotBtn").addEventListener(
+        "click",
+        function() {
+
+            document.getElementById("forgotEmail").value =
+                document.getElementById("loginEmail").value.trim();
+
+            showSection(forgotSection);
+        }
+    );
+
+
+    // SEND RECOVERY EMAIL
+
+    document.getElementById("forgotForm").addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+            const email =
+                document.getElementById("forgotEmail").value.trim();
+
+            const button = document.getElementById("forgotSubmitBtn");
+            const message = document.getElementById("forgotMessage");
+
+            button.disabled = true;
+            button.textContent = "Sending...";
+
+            try {
+
+                const redirectURL =
+                    window.location.origin + window.location.pathname;
+
+                const { error } =
+                    await supabaseClient.auth.resetPasswordForEmail(
+                        email,
+                        {
+                            redirectTo: redirectURL
+                        }
+                    );
+
+                if (error) throw error;
+
+                showMessage(
+                    message,
+                    "Recovery email sent! Check your inbox.",
+                    "#4ade80"
+                );
+
+            } catch (error) {
+
+                showMessage(message, error.message, "#f87171");
+
+            } finally {
+
+                button.disabled = false;
+                button.textContent = "Send Recovery Email";
+            }
+        }
+    );
+
+
+    // BACK TO LOGIN
+
+    document.getElementById("backToLogin1").addEventListener(
+        "click",
+        function() {
+            showSection(loginSection);
+        }
+    );
+
+
+    // DETECT PASSWORD RECOVERY SESSION
+
+    let recoverySessionReady = false;
+
+    supabaseClient.auth.onAuthStateChange(
+        function(event, session) {
+
+            if (event === "PASSWORD_RECOVERY" && session) {
+
+                recoverySessionReady = true;
+
+                showSection(resetSection);
+
+                showMessage(
+                    document.getElementById("resetMessage"),
+                    "Recovery verified. Enter your new password.",
+                    "#4ade80"
+                );
+            }
+        }
+    );
+
+
+    // UPDATE PASSWORD
+
+    document.getElementById("resetForm").addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+            const password =
+                document.getElementById("newPassword").value;
+
+            const confirmPassword =
+                document.getElementById("confirmPassword").value;
+
+            const button = document.getElementById("resetBtn");
+            const message = document.getElementById("resetMessage");
+
+            if (password.length < 8) {
+                showMessage(
+                    message,
+                    "Password must be at least 8 characters.",
+                    "#f87171"
+                );
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage(
+                    message,
+                    "Passwords do not match.",
+                    "#f87171"
+                );
+                return;
+            }
+
+            if (!recoverySessionReady) {
+                showMessage(
+                    message,
+                    "Recovery session not found. Please request a new recovery email.",
+                    "#f87171"
+                );
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = "Updating...";
+
+            try {
+
+                const { error } =
+                    await supabaseClient.auth.updateUser({
+                        password: password
+                    });
+
+                if (error) throw error;
+
+                showMessage(
+                    message,
+                    "Password changed successfully! Please login with your new password.",
+                    "#4ade80"
+                );
+
+                document.getElementById("resetForm").reset();
+
+                await supabaseClient.auth.signOut();
+
+                recoverySessionReady = false;
+
+                setTimeout(function() {
+                    showSection(loginSection);
+                }, 2500);
+
+            } catch (error) {
+
+                showMessage(message, error.message, "#f87171");
+
+            } finally {
+
+                button.disabled = false;
+                button.textContent = "Update Password";
+            }
+        }
+    );
+
+</script>
+
+</body>
+</html>
+
