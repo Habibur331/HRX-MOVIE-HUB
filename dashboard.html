@@ -4,135 +4,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HRX MOVIE HUB - Admin Dashboard</title>
-
+<title>HRX MOVIE HUB - Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: Arial, sans-serif;
-    background: #0b1120;
-    color: white;
-}
-
-header {
-    background: #111c30;
-    padding: 20px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #263449;
-}
-
-header h2 {
-    color: #38bdf8;
-}
-
-button {
-    cursor: pointer;
-    border: none;
-    padding: 11px 18px;
-    border-radius: 7px;
-    font-weight: bold;
-}
-
-.logout {
-    background: #ef4444;
-    color: white;
-}
-
-.container {
-    max-width: 1100px;
-    margin: 35px auto;
-    padding: 0 20px;
-}
-
-.welcome {
-    margin-bottom: 25px;
-}
-
-.welcome h1 {
-    margin-bottom: 8px;
-}
-
-.cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 18px;
-    margin-bottom: 30px;
-}
-
-.card {
-    background: #17243a;
-    padding: 25px;
-    border-radius: 12px;
-    border: 1px solid #263449;
-}
-
-.card h3 {
-    color: #94a3b8;
-    margin-bottom: 12px;
-}
-
-.card p {
-    font-size: 25px;
-    font-weight: bold;
-    color: #38bdf8;
-}
-
-.panel {
-    background: #17243a;
-    padding: 25px;
-    border-radius: 12px;
-    border: 1px solid #263449;
-    margin-bottom: 25px;
-}
-
-.panel h2 {
-    margin-bottom: 18px;
-}
-
-input, textarea, select {
-    width: 100%;
-    padding: 13px;
-    margin: 8px 0 15px;
-    background: #0b1120;
-    color: white;
-    border: 1px solid #334155;
-    border-radius: 7px;
-}
-
-label {
-    color: #cbd5e1;
-}
-
-.add-btn {
-    background: #0284c7;
-    color: white;
-}
-
-.notice {
-    color: #fbbf24;
-    line-height: 1.7;
-}
-
-footer {
-    text-align: center;
-    padding: 25px;
-    color: #64748b;
-}
-
-#loading {
-    text-align: center;
-    padding: 100px 20px;
-    color: #38bdf8;
-}
+*{box-sizing:border-box}
+body{margin:0;background:#0b1120;color:#fff;font-family:Arial,sans-serif}
+header{background:#111c30;padding:18px 25px;display:flex;justify-content:space-between;align-items:center}
+header h2{color:#38bdf8;margin:0}
+button{padding:11px 16px;border:0;border-radius:6px;cursor:pointer;font-weight:bold}
+.logout{background:#ef4444;color:white}
+.container{max-width:1050px;margin:30px auto;padding:0 18px}
+.panel{background:#17243a;padding:22px;border-radius:10px;margin-bottom:22px}
+input,textarea,select{width:100%;padding:12px;margin:8px 0 15px;background:#0b1120;color:white;border:1px solid #334155;border-radius:6px}
+label{color:#cbd5e1}
+.primary{background:#0284c7;color:white}
+.secondary{background:#475569;color:white}
+.danger{background:#dc2626;color:white}
+.movie{display:flex;gap:15px;align-items:center;border-bottom:1px solid #334155;padding:15px 0}
+.movie img{width:65px;height:90px;object-fit:cover;border-radius:5px}
+.movie-info{flex:1;min-width:0}
+.movie-info p{color:#94a3b8;font-size:13px;overflow-wrap:anywhere}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+#message{margin:12px 0;color:#38bdf8}
+#loading{text-align:center;padding:100px}
+.hidden{display:none}
 </style>
 </head>
 
@@ -140,131 +36,263 @@ footer {
 
 <div id="loading">Checking Admin Login...</div>
 
-<div id="dashboard" style="display:none;">
+<div id="app" class="hidden">
 
 <header>
-    <h2>HRX MOVIE HUB</h2>
-    <button class="logout" id="logoutBtn">Logout</button>
+<h2>HRX MOVIE HUB</h2>
+<button class="logout" id="logoutBtn">Logout</button>
 </header>
 
 <div class="container">
 
-    <div class="welcome">
-        <h1>Admin Dashboard</h1>
-        <p>Welcome to HRX MOVIE HUB Management Panel.</p>
-    </div>
-
-    <div class="cards">
-        <div class="card">
-            <h3>Total Movies</h3>
-            <p id="totalMovies">0</p>
-        </div>
-
-        <div class="card">
-            <h3>Admin Status</h3>
-            <p style="font-size:18px;">Logged In</p>
-        </div>
-
-        <div class="card">
-            <h3>Website</h3>
-            <p style="font-size:18px;">Online</p>
-        </div>
-    </div>
-
-    <div class="panel">
-        <h2>Movie Management</h2>
-
-        <p class="notice">
-            Movie database connection is the next setup step.
-            We will connect this panel to your existing Supabase
-            project after configuring secure database permissions.
-        </p>
-    </div>
-
-    <div class="panel">
-        <h2>Add New Movie (Form Preview)</h2>
-
-        <label>Movie Title</label>
-        <input type="text" placeholder="Enter movie title" disabled>
-
-        <label>Release Year</label>
-        <input type="number" placeholder="Enter release year" disabled>
-
-        <label>Genre</label>
-        <select disabled>
-            <option>Select Genre</option>
-            <option>Action</option>
-            <option>Adventure</option>
-            <option>Comedy</option>
-            <option>Drama</option>
-            <option>Horror</option>
-            <option>Thriller</option>
-        </select>
-
-        <label>Poster Image URL</label>
-        <input type="url" placeholder="Enter poster URL" disabled>
-
-        <label>Legal External Movie Link</label>
-        <input type="url" placeholder="Enter authorized external link" disabled>
-
-        <label>Description</label>
-        <textarea rows="4" placeholder="Movie description" disabled></textarea>
-
-        <button class="add-btn" disabled>Add Movie</button>
-
-        <p class="notice" style="margin-top:15px;">
-            Add Movie feature will be activated after database security setup.
-        </p>
-    </div>
-
+<div class="panel">
+<h2>Admin Dashboard</h2>
+<p>Total Movies: <strong id="totalMovies">0</strong></p>
 </div>
 
-<footer>
-    HRX MOVIE HUB © 2026 | Admin Panel
-</footer>
+<div class="panel">
+<h2 id="formTitle">Add New Movie</h2>
 
+<form id="movieForm">
+
+<input type="hidden" id="movieId">
+
+<label>Movie Title *</label>
+<input id="title" required placeholder="Enter movie title">
+
+<label>Release Year</label>
+<input id="year" type="number" placeholder="2026">
+
+<label>Genre</label>
+<select id="genre">
+<option value="">Select Genre</option>
+<option>Action</option>
+<option>Adventure</option>
+<option>Animation</option>
+<option>Comedy</option>
+<option>Crime</option>
+<option>Drama</option>
+<option>Horror</option>
+<option>Romance</option>
+<option>Science Fiction</option>
+<option>Thriller</option>
+</select>
+
+<label>Rating</label>
+<input id="rating" type="number" min="0" max="10" step="0.1" placeholder="8.5">
+
+<label>Poster Image URL</label>
+<input id="poster" type="url" placeholder="https://example.com/poster.jpg">
+
+<label>Legal External Movie Link</label>
+<input id="external" type="url" placeholder="Authorized movie link">
+
+<label>Description</label>
+<textarea id="description" rows="4" placeholder="Movie description"></textarea>
+
+<button class="primary" type="submit" id="saveBtn">Add Movie</button>
+<button class="secondary hidden" type="button" id="cancelBtn">Cancel Edit</button>
+
+<p id="message"></p>
+</form>
+</div>
+
+<div class="panel">
+<h2>Manage Movies</h2>
+<div id="movieList">Loading movies...</div>
+</div>
+
+</div>
 </div>
 
 <script>
 const SUPABASE_URL = "https://sdfrbfyywzlzpkrlpguh.supabase.co";
+const SUPABASE_KEY = "sb_publishable_2PkFUoj4M_jAxOpX7AAODw_GW9Jc4G4";
 
-const SUPABASE_ANON_KEY = "sb_publishable_2PkFUoj4M_jAxOpX7AAODw_GW9Jc4G4";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-);
+const $ = id => document.getElementById(id);
 
-async function checkAdminLogin() {
-    const { data, error } = await supabaseClient.auth.getSession();
+let currentUser = null;
 
-    if (error || !data.session) {
-        window.location.replace("admin.html");
-        return;
-    }
-
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
+function safe(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;",
+        '"':"&quot;", "'":"&#39;"
+    })[char]);
 }
 
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-    const { error } = await supabaseClient.auth.signOut();
+async function startDashboard() {
+    const {data, error} = await db.auth.getSession();
 
-    if (error) {
-        alert("Logout failed: " + error.message);
+    if (error || !data.session) {
+        location.replace("admin.html");
         return;
     }
 
-    window.location.replace("admin.html");
-});
+    currentUser = data.session.user;
 
-supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (event === "SIGNED_OUT" || !session) {
-        window.location.replace("admin.html");
+    const {data: admin, error: adminError} = await db
+        .from("admins")
+        .select("user_id")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+    if (adminError || !admin) {
+        $("loading").textContent = "Access denied. Admin permission not found.";
+        await db.auth.signOut();
+        return;
     }
+
+    $("loading").classList.add("hidden");
+    $("app").classList.remove("hidden");
+
+    await loadMovies();
+}
+
+async function loadMovies() {
+    $("movieList").textContent = "Loading movies...";
+
+    const {data, error} = await db
+        .from("movies")
+        .select("*")
+        .order("created_at", {ascending:false});
+
+    if (error) {
+        $("movieList").textContent = "Error: " + error.message;
+        return;
+    }
+
+    $("totalMovies").textContent = data.length;
+
+    if (!data.length) {
+        $("movieList").textContent = "No movies added yet.";
+        return;
+    }
+
+    $("movieList").innerHTML = data.map(movie => `
+        <div class="movie">
+            <img src="${safe(movie.poster_url || "")}"
+                 alt="Poster"
+                 onerror="this.style.display='none'">
+            <div class="movie-info">
+                <strong>${safe(movie.title)}</strong>
+                <p>${safe(movie.release_year || "")} | ${safe(movie.genre || "")}</p>
+            </div>
+            <div class="actions">
+                <button class="secondary" onclick="editMovie('${safe(movie.id)}')">Edit</button>
+                <button class="danger" onclick="deleteMovie('${safe(movie.id)}')">Delete</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+$("movieForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const id = $("movieId").value;
+
+    const movie = {
+        title: $("title").value.trim(),
+        release_year: $("year").value ? Number($("year").value) : null,
+        genre: $("genre").value || null,
+        rating: $("rating").value ? Number($("rating").value) : null,
+        poster_url: $("poster").value.trim() || null,
+        external_url: $("external").value.trim() || null,
+        description: $("description").value.trim() || null
+    };
+
+    if (!movie.title) {
+        $("message").textContent = "Movie title is required.";
+        return;
+    }
+
+    $("saveBtn").disabled = true;
+    $("message").textContent = "Saving...";
+
+    let result;
+
+    if (id) {
+        result = await db.from("movies").update(movie).eq("id", id);
+    } else {
+        result = await db.from("movies").insert(movie);
+    }
+
+    $("saveBtn").disabled = false;
+
+    if (result.error) {
+        $("message").textContent = "Error: " + result.error.message;
+        return;
+    }
+
+    $("message").textContent = "Movie saved successfully!";
+    resetForm();
+    await loadMovies();
 });
 
-checkAdminLogin();
+async function editMovie(id) {
+    const {data, error} = await db
+        .from("movies")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    $("movieId").value = data.id;
+    $("title").value = data.title || "";
+    $("year").value = data.release_year || "";
+    $("genre").value = data.genre || "";
+    $("rating").value = data.rating ?? "";
+    $("poster").value = data.poster_url || "";
+    $("external").value = data.external_url || "";
+    $("description").value = data.description || "";
+
+    $("formTitle").textContent = "Edit Movie";
+    $("saveBtn").textContent = "Update Movie";
+    $("cancelBtn").classList.remove("hidden");
+
+    window.scrollTo({top:0, behavior:"smooth"});
+}
+
+async function deleteMovie(id) {
+    if (!confirm("Are you sure you want to delete this movie?")) return;
+
+    const {error} = await db.from("movies").delete().eq("id", id);
+
+    if (error) {
+        alert("Delete failed: " + error.message);
+        return;
+    }
+
+    await loadMovies();
+}
+
+function resetForm() {
+    $("movieForm").reset();
+    $("movieId").value = "";
+    $("formTitle").textContent = "Add New Movie";
+    $("saveBtn").textContent = "Add Movie";
+    $("cancelBtn").classList.add("hidden");
+}
+
+$("cancelBtn").addEventListener("click", resetForm);
+
+$("logoutBtn").addEventListener("click", async () => {
+    const {error} = await db.auth.signOut();
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    location.replace("admin.html");
+});
+
+startDashboard();
 </script>
 
 </body>
