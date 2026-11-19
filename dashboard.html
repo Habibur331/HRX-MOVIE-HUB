@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HRX MOVIE HUB - Admin Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #0b1120;
+    color: white;
+}
+
+header {
+    background: #111c30;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #263449;
+}
+
+header h2 {
+    color: #38bdf8;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    padding: 11px 18px;
+    border-radius: 7px;
+    font-weight: bold;
+}
+
+.logout {
+    background: #ef4444;
+    color: white;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 35px auto;
+    padding: 0 20px;
+}
+
+.welcome {
+    margin-bottom: 25px;
+}
+
+.welcome h1 {
+    margin-bottom: 8px;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: #17243a;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #263449;
+}
+
+.card h3 {
+    color: #94a3b8;
+    margin-bottom: 12px;
+}
+
+.card p {
+    font-size: 25px;
+    font-weight: bold;
+    color: #38bdf8;
+}
+
+.panel {
+    background: #17243a;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #263449;
+    margin-bottom: 25px;
+}
+
+.panel h2 {
+    margin-bottom: 18px;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 13px;
+    margin: 8px 0 15px;
+    background: #0b1120;
+    color: white;
+    border: 1px solid #334155;
+    border-radius: 7px;
+}
+
+label {
+    color: #cbd5e1;
+}
+
+.add-btn {
+    background: #0284c7;
+    color: white;
+}
+
+.notice {
+    color: #fbbf24;
+    line-height: 1.7;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #64748b;
+}
+
+#loading {
+    text-align: center;
+    padding: 100px 20px;
+    color: #38bdf8;
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading">Checking Admin Login...</div>
+
+<div id="dashboard" style="display:none;">
+
+<header>
+    <h2>HRX MOVIE HUB</h2>
+    <button class="logout" id="logoutBtn">Logout</button>
+</header>
+
+<div class="container">
+
+    <div class="welcome">
+        <h1>Admin Dashboard</h1>
+        <p>Welcome to HRX MOVIE HUB Management Panel.</p>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <h3>Total Movies</h3>
+            <p id="totalMovies">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Admin Status</h3>
+            <p style="font-size:18px;">Logged In</p>
+        </div>
+
+        <div class="card">
+            <h3>Website</h3>
+            <p style="font-size:18px;">Online</p>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Movie Management</h2>
+
+        <p class="notice">
+            Movie database connection is the next setup step.
+            We will connect this panel to your existing Supabase
+            project after configuring secure database permissions.
+        </p>
+    </div>
+
+    <div class="panel">
+        <h2>Add New Movie (Form Preview)</h2>
+
+        <label>Movie Title</label>
+        <input type="text" placeholder="Enter movie title" disabled>
+
+        <label>Release Year</label>
+        <input type="number" placeholder="Enter release year" disabled>
+
+        <label>Genre</label>
+        <select disabled>
+            <option>Select Genre</option>
+            <option>Action</option>
+            <option>Adventure</option>
+            <option>Comedy</option>
+            <option>Drama</option>
+            <option>Horror</option>
+            <option>Thriller</option>
+        </select>
+
+        <label>Poster Image URL</label>
+        <input type="url" placeholder="Enter poster URL" disabled>
+
+        <label>Legal External Movie Link</label>
+        <input type="url" placeholder="Enter authorized external link" disabled>
+
+        <label>Description</label>
+        <textarea rows="4" placeholder="Movie description" disabled></textarea>
+
+        <button class="add-btn" disabled>Add Movie</button>
+
+        <p class="notice" style="margin-top:15px;">
+            Add Movie feature will be activated after database security setup.
+        </p>
+    </div>
+
+</div>
+
+<footer>
+    HRX MOVIE HUB © 2026 | Admin Panel
+</footer>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://sdfrbfyywzlzpkrlpguh.supabase.co";
+
+const SUPABASE_ANON_KEY = "sb_publishable_2PkFUoj4M_jAxOpX7AAODw_GW9Jc4G4";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+async function checkAdminLogin() {
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error || !data.session) {
+        window.location.replace("admin.html");
+        return;
+    }
+
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+}
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+        alert("Logout failed: " + error.message);
+        return;
+    }
+
+    window.location.replace("admin.html");
+});
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT" || !session) {
+        window.location.replace("admin.html");
+    }
+});
+
+checkAdminLogin();
+</script>
+
+</body>
+</html>
