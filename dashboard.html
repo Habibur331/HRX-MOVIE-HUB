@@ -110,8 +110,7 @@ label{color:#cbd5e1}
 
 <script>
 const SUPABASE_URL = "https://sdfrbfyywzlzpkrlpguh.supabase.co";
-const SUPABASE_KEY = "sb_publishable_2PkFUoj4M_jAxOpX7AAODw_GW9Jc4G";
-
+const SUPABASE_KEY = "sb_publishable_2PkFUoj4M_jAxOpX7AAODw_GW9Jc4G4";
 const CLOUDINARY_CLOUD_NAME = "o3n83n3g";
 const CLOUDINARY_UPLOAD_PRESET = "hrx_movie_posters";
 
@@ -143,10 +142,19 @@ async function startDashboard() {
         .eq("user_id", currentUser.id)
         .maybeSingle();
 
-    if (adminError || !admin) {
-        $("loading").textContent = "Access denied. Admin permission not found.";
-        await db.auth.signOut();
-        return;
+    console.log("Logged-in User:", currentUser.id);
+console.log("Admin Query:", { admin, adminError });
+
+if (adminError) {
+    $("loading").textContent = "Admin Query Error: " + adminError.message;
+    console.error(adminError);
+    return;
+}
+
+if (!admin) {
+    $("loading").textContent = "Admin record not found for: " + currentUser.id;
+    return;
+}
     }
 
     $("loading").classList.add("hidden");
