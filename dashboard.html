@@ -1,12 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HRX MOVIE HUB - Admin</title>
+<title>HRX MOVIE HUB - Admin Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0b1120;color:#fff;font-family:Arial,sans-serif}
@@ -14,169 +12,187 @@ header{background:#111c30;padding:18px 25px;display:flex;justify-content:space-b
 header h2{color:#38bdf8;margin:0}
 button{padding:11px 16px;border:0;border-radius:6px;cursor:pointer;font-weight:bold}
 button:disabled{opacity:.5;cursor:not-allowed}
-.logout{background:#ef4444;color:white}
+.logout,.danger{background:#dc2626;color:#fff}
 .container{max-width:1050px;margin:30px auto;padding:0 18px}
 .panel{background:#17243a;padding:22px;border-radius:10px;margin-bottom:22px}
-input,textarea,select{width:100%;padding:12px;margin:8px 0 15px;background:#0b1120;color:white;border:1px solid #334155;border-radius:6px}
+input,textarea,select{width:100%;padding:12px;margin:8px 0 15px;background:#0b1120;color:#fff;border:1px solid #334155;border-radius:6px}
 label{color:#cbd5e1}
-.primary{background:#0284c7;color:white}
-.secondary{background:#475569;color:white}
-.danger{background:#dc2626;color:white}
+.primary{background:#0284c7;color:#fff}
+.secondary{background:#475569;color:#fff}
 .movie{display:flex;gap:15px;align-items:center;border-bottom:1px solid #334155;padding:15px 0}
 .movie img{width:65px;height:90px;object-fit:cover;border-radius:5px}
 .movie-info{flex:1;min-width:0}
 .movie-info p{color:#94a3b8;font-size:13px;overflow-wrap:anywhere}
 .actions{display:flex;gap:7px;flex-wrap:wrap}
 #message{margin:12px 0;color:#38bdf8;overflow-wrap:anywhere}
-#loading{text-align:center;padding:100px}
-.hidden{display:none}
+#loading{text-align:center;padding:100px 20px}
+.hidden{display:none!important}
 .hint{font-size:12px;color:#94a3b8;margin-top:-8px}
+@media(max-width:600px){.movie{align-items:flex-start;flex-wrap:wrap}.movie-info{min-width:calc(100% - 90px)}.actions{width:100%;padding-left:80px}}
 </style>
 </head>
-
 <body>
 <div id="loading">Checking Admin Login...</div>
 
 <div id="app" class="hidden">
 <header>
 <h2>HRX MOVIE HUB</h2>
-<button class="logout" id="logoutBtn">Logout</button>
+<button class="logout" id="logoutBtn" type="button">Logout</button>
 </header>
 
-<div class="container">
-
-<div class="panel">
+<main class="container">
+<section class="panel">
 <h2>Admin Dashboard</h2>
 <p>Total Movies: <strong id="totalMovies">0</strong></p>
-</div>
+</section>
 
-<div class="panel">
+<section class="panel">
 <h2 id="formTitle">Add New Movie</h2>
-
 <form id="movieForm">
 <input type="hidden" id="movieId">
 
-<label>Movie Title *</label>
+<label for="title">Movie Title *</label>
 <input id="title" required placeholder="Enter movie title">
 
-<label>Release Year</label>
-<input id="year" type="number" placeholder="2026">
+<label for="year">Release Year</label>
+<input id="year" type="number" min="1888" max="2100" placeholder="2026">
 
-<label>Genre</label>
+<label for="genre">Genre</label>
 <select id="genre">
 <option value="">Select Genre</option>
-<option>Action</option>
-<option>Adventure</option>
-<option>Animation</option>
-<option>Comedy</option>
-<option>Crime</option>
-<option>Drama</option>
-<option>Horror</option>
-<option>Romance</option>
-<option>Science Fiction</option>
+<option>Action</option><option>Adventure</option><option>Animation</option>
+<option>Comedy</option><option>Crime</option><option>Drama</option>
+<option>Horror</option><option>Romance</option><option>Science Fiction</option>
 <option>Thriller</option>
 </select>
 
-<label>Rating</label>
+<label for="rating">Rating</label>
 <input id="rating" type="number" min="0" max="10" step="0.1" placeholder="8.5">
 
-<label>Upload Poster Image</label>
+<label for="posterFile">Upload Poster Image</label>
 <input id="posterFile" type="file" accept="image/jpeg,image/png,image/webp">
-<p class="hint">JPG, PNG অথবা WebP — সর্বোচ্চ 5 MB</p>
+<p class="hint">JPG, PNG or WebP — maximum 5 MB</p>
 
-<label>Poster Image URL (Optional)</label>
+<label for="poster">Poster Image URL (Optional)</label>
 <input id="poster" type="url" placeholder="Uploaded image URL will appear here">
 
-<label>Legal External Movie Link</label>
+<label for="external">Legal External Movie Link</label>
 <input id="external" type="url" placeholder="Authorized movie link">
 
-<label>Description</label>
+<label for="description">Description</label>
 <textarea id="description" rows="4" placeholder="Movie description"></textarea>
 
 <button class="primary" type="submit" id="saveBtn">Add Movie</button>
 <button class="secondary hidden" type="button" id="cancelBtn">Cancel Edit</button>
-
-<p id="message"></p>
+<p id="message" role="status"></p>
 </form>
-</div>
+</section>
 
-<div class="panel">
+<section class="panel">
 <h2>Manage Movies</h2>
 <div id="movieList">Loading movies...</div>
-</div>
-
-</div>
+</section>
+</main>
 </div>
 
 <script>
+"use strict";
+
+// Supabase project configuration
 const SUPABASE_URL = "https://sdfrbfyywzlzpkrlpguh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_2PkFUoj4M_jAxOpX7AAODw_GW9Jc4G4";
+
+// Cloudinary unsigned upload configuration
 const CLOUDINARY_CLOUD_NAME = "o3n83n3g";
 const CLOUDINARY_UPLOAD_PRESET = "hrx_movie_posters";
 
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const $ = id => document.getElementById(id);
-
+const $ = (id) => document.getElementById(id);
+let db = null;
 let currentUser = null;
 
-function safe(value) {
-    return String(value ?? "").replace(/[&<>"']/g, char => ({
-        "&":"&amp;", "<":"&lt;", ">":"&gt;",
-        '"':"&quot;", "'":"&#39;"
+function showLoading(message) {
+    $("loading").textContent = message;
+    $("loading").classList.remove("hidden");
+    $("app").classList.add("hidden");
+}
+
+function showMessage(message, isError = false) {
+    $("message").textContent = message;
+    $("message").style.color = isError ? "#f87171" : "#38bdf8";
+}
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
     })[char]);
 }
 
 async function startDashboard() {
-    const {data, error} = await db.auth.getSession();
+    try {
+        if (!window.supabase) {
+            throw new Error("Supabase library did not load. Check your internet connection and refresh.");
+        }
 
-    if (error || !data.session) {
-        location.replace("admin.html");
-        return;
+        db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const { data: sessionData, error: sessionError } = await db.auth.getSession();
+
+        if (sessionError) {
+            throw new Error("Session error: " + sessionError.message);
+        }
+
+        if (!sessionData.session) {
+            location.replace("admin.html");
+            return;
+        }
+
+        currentUser = sessionData.session.user;
+        console.log("Logged-in User ID:", currentUser.id);
+
+        const { data: admin, error: adminError } = await db
+            .from("admins")
+            .select("user_id")
+            .eq("user_id", currentUser.id)
+            .maybeSingle();
+
+        console.log("Admin query result:", { admin, adminError });
+
+        if (adminError) {
+            throw new Error("Admin permission query failed: " + adminError.message);
+        }
+
+        if (!admin) {
+            showLoading("Admin record not found for user ID: " + currentUser.id);
+            return;
+        }
+
+        $("loading").classList.add("hidden");
+        $("app").classList.remove("hidden");
+        await loadMovies();
+
+    } catch (error) {
+        console.error("Dashboard startup error:", error);
+        showLoading("Dashboard Error: " + (error.message || String(error)));
     }
-
-    currentUser = data.session.user;
-
-    const {data: admin, error: adminError} = await db
-        .from("admins")
-        .select("user_id")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-
-    console.log("Logged-in User:", currentUser.id);
-console.log("Admin Query:", { admin, adminError });
-
-if (adminError) {
-    $("loading").textContent = "Admin Query Error: " + adminError.message;
-    console.error(adminError);
-    return;
-}
-
-if (!admin) {
-    $("loading").textContent = "Admin record not found for: " + currentUser.id;
-    return;
-}
-    }
-
-    $("loading").classList.add("hidden");
-    $("app").classList.remove("hidden");
-
-    await loadMovies();
 }
 
 async function uploadPoster(file) {
     if (!file) return null;
 
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-
     if (!allowedTypes.includes(file.type)) {
-        throw new Error("শুধু JPG, PNG অথবা WebP ছবি আপলোড করুন।");
+        throw new Error("Only JPG, PNG or WebP images are allowed.");
     }
 
     if (file.size > 5 * 1024 * 1024) {
-        throw new Error("ছবির সাইজ 5 MB-এর বেশি হতে পারবে না।");
+        throw new Error("Poster image must be 5 MB or smaller.");
     }
 
-    $("message").textContent = "Poster Cloudinary-তে Upload হচ্ছে...";
+    showMessage("Uploading poster to Cloudinary...");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -184,16 +200,13 @@ async function uploadPoster(file) {
 
     const response = await fetch(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-            method: "POST",
-            body: formData
-        }
+        { method: "POST", body: formData }
     );
 
     const result = await response.json();
 
     if (!response.ok) {
-        throw new Error(result.error?.message || "Poster upload failed.");
+        throw new Error(result.error?.message || "Cloudinary poster upload failed.");
     }
 
     return result.secure_url;
@@ -202,13 +215,14 @@ async function uploadPoster(file) {
 async function loadMovies() {
     $("movieList").textContent = "Loading movies...";
 
-    const {data, error} = await db
+    const { data, error } = await db
         .from("movies")
         .select("*")
-        .order("created_at", {ascending:false});
+        .order("created_at", { ascending: false });
 
     if (error) {
-        $("movieList").textContent = "Error: " + error.message;
+        $("movieList").textContent = "Could not load movies: " + error.message;
+        console.error("Load movies error:", error);
         return;
     }
 
@@ -219,31 +233,28 @@ async function loadMovies() {
         return;
     }
 
-    $("movieList").innerHTML = data.map(movie => `
+    $("movieList").innerHTML = data.map((movie) => `
         <div class="movie">
-            <img src="${safe(movie.poster_url || "")}"
-                 alt="Poster"
+            <img src="${escapeHTML(movie.poster_url || "")}" alt="Poster"
                  onerror="this.style.display='none'">
             <div class="movie-info">
-                <strong>${safe(movie.title)}</strong>
-                <p>${safe(movie.release_year || "")} | ${safe(movie.genre || "")}</p>
+                <strong>${escapeHTML(movie.title)}</strong>
+                <p>${escapeHTML(movie.release_year || "")} | ${escapeHTML(movie.genre || "")}</p>
             </div>
             <div class="actions">
-                <button class="secondary" onclick="editMovie('${safe(movie.id)}')">Edit</button>
-                <button class="danger" onclick="deleteMovie('${safe(movie.id)}')">Delete</button>
+                <button class="secondary" type="button" data-action="edit" data-id="${escapeHTML(movie.id)}">Edit</button>
+                <button class="danger" type="button" data-action="delete" data-id="${escapeHTML(movie.id)}">Delete</button>
             </div>
         </div>
     `).join("");
 }
 
-$("movieForm").addEventListener("submit", async function(event) {
+async function saveMovie(event) {
     event.preventDefault();
 
     const id = $("movieId").value;
     const file = $("posterFile").files[0];
-
     $("saveBtn").disabled = true;
-    $("message").textContent = "Please wait...";
 
     try {
         let posterUrl = $("poster").value.trim() || null;
@@ -267,10 +278,9 @@ $("movieForm").addEventListener("submit", async function(event) {
             throw new Error("Movie title is required.");
         }
 
-        $("message").textContent = "Saving movie...";
+        showMessage("Saving movie...");
 
         let result;
-
         if (id) {
             result = await db.from("movies").update(movie).eq("id", id);
         } else {
@@ -281,32 +291,33 @@ $("movieForm").addEventListener("submit", async function(event) {
             throw new Error(result.error.message);
         }
 
-        $("message").textContent = "Movie saved successfully!";
+        showMessage("Movie saved successfully!");
         resetForm();
         await loadMovies();
 
     } catch (error) {
-        $("message").textContent = "Error: " + error.message;
+        console.error("Save movie error:", error);
+        showMessage("Error: " + error.message, true);
     } finally {
         $("saveBtn").disabled = false;
     }
-});
+}
 
 async function editMovie(id) {
-    const {data, error} = await db
+    const { data, error } = await db
         .from("movies")
         .select("*")
         .eq("id", id)
         .single();
 
     if (error) {
-        alert(error.message);
+        alert("Could not open movie: " + error.message);
         return;
     }
 
     $("movieId").value = data.id;
     $("title").value = data.title || "";
-    $("year").value = data.release_year || "";
+    $("year").value = data.release_year ?? "";
     $("genre").value = data.genre || "";
     $("rating").value = data.rating ?? "";
     $("poster").value = data.poster_url || "";
@@ -317,14 +328,13 @@ async function editMovie(id) {
     $("formTitle").textContent = "Edit Movie";
     $("saveBtn").textContent = "Update Movie";
     $("cancelBtn").classList.remove("hidden");
-
-    window.scrollTo({top:0, behavior:"smooth"});
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 async function deleteMovie(id) {
     if (!confirm("Are you sure you want to delete this movie?")) return;
 
-    const {error} = await db.from("movies").delete().eq("id", id);
+    const { error } = await db.from("movies").delete().eq("id", id);
 
     if (error) {
         alert("Delete failed: " + error.message);
@@ -342,17 +352,29 @@ function resetForm() {
     $("cancelBtn").classList.add("hidden");
 }
 
+$("movieForm").addEventListener("submit", saveMovie);
 $("cancelBtn").addEventListener("click", resetForm);
-
 $("logoutBtn").addEventListener("click", async () => {
-    const {error} = await db.auth.signOut();
+    const { error } = await db.auth.signOut();
 
     if (error) {
-        alert(error.message);
+        alert("Logout failed: " + error.message);
         return;
     }
 
     location.replace("admin.html");
+});
+
+$("movieList").addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+
+    const id = button.dataset.id;
+    if (button.dataset.action === "edit") {
+        await editMovie(id);
+    } else if (button.dataset.action === "delete") {
+        await deleteMovie(id);
+    }
 });
 
 startDashboard();
